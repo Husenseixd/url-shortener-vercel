@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shorten Your URL</title>
+  <style>
+    body {
+      background: #111;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #181a1b;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      padding: 2.5rem 2rem 2rem 2rem;
+      max-width: 600px;
+      width: 100%;
+      margin: 2rem;
+      text-align: center;
+    }
+    .card h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+    }
+    .card h1 .icon {
+      font-size: 1.3em;
+      color: #4fc3f7;
+    }
+    .subtitle {
+      color: #ccc;
+      font-size: 1.1em;
+      margin-bottom: 0.2em;
+    }
+    .tip {
+      color: #666;
+      font-size: 0.95em;
+      margin-bottom: 1.5em;
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+      margin-bottom: 0.5em;
+    }
+    .url-input {
+      flex: 1;
+      padding: 0.9em 1em;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #111;
+      color: #eee;
+      font-size: 1.1em;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .url-input:focus {
+      border: 1.5px solid #4fc3f7;
+    }
+    .shorten-btn {
+      background: #222;
+      color: #4fc3f7;
+      border: none;
+      border-radius: 6px;
+      padding: 0.9em 1.3em;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      transition: background 0.2s, color 0.2s;
+    }
+    .shorten-btn:hover {
+      background: #4fc3f7;
+      color: #111;
+    }
+    .result {
+      margin-top: 1.5em;
+      color: #fff;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7em;
+    }
+    .short-url {
+      font-weight: bold;
+      color: #4fc3f7;
+      text-decoration: none;
+    }
+    .copy-btn {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.3em 0.9em;
+      font-size: 1em;
+      cursor: pointer;
+      margin-left: 0.5em;
+      transition: background 0.2s, color 0.2s;
+    }
+    .copy-btn:hover {
+      background: #4fc3f7;
+      color: #111;
+    }
+    .error {
+      color: #ff6b6b;
+      background: #2a0000;
+      border-radius: 4px;
+      margin-top: 1em;
+      padding: 0.7em 1em;
+      font-size: 1em;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1><span class="icon">⚡</span> Shorten Your URL</h1>
+    <div class="subtitle">Enter a long URL below to get a shortened version</div>
+    <form id="shorten-form" autocomplete="off">
+      <div class="form-row">
+        <input type="url" id="long-url" class="url-input" placeholder="https://example.com/very-long-url-that-needs-shortening" required />
+        <button type="submit" class="shorten-btn"><span class="icon">⚡</span> Shorten</button>
+      </div>
+    </form>
+    <div class="result" id="result" style="display:none;">
+      <a class="short-url" id="short-url" href="#" target="_blank"></a>
+      <button class="copy-btn" id="copy-btn">Copy</button>
+    </div>
+    <div class="error" id="error"></div>
+  </div>
+  <script>
+    const form = document.getElementById('shorten-form');
+    const longUrlInput = document.getElementById('long-url');
+    const resultDiv = document.getElementById('result');
+    const shortUrlLink = document.getElementById('short-url');
+    const copyBtn = document.getElementById('copy-btn');
+    const errorDiv = document.getElementById('error');
+
+    const apiEndpoint = '/api/shorten';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultDiv.style.display = 'none';
+      errorDiv.style.display = 'none';
+      const longUrl = longUrlInput.value;
+      try {
+        const res = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: longUrl })
+        });
+        if (!res.ok) {
+          throw new Error('Failed to shorten URL');
+        }
+        const data = await res.json();
+        shortUrlLink.textContent = data.short_url;
+        shortUrlLink.href = data.short_url;
+        resultDiv.style.display = 'flex';
+      } catch (err) {
+        errorDiv.textContent = err.message;
+        errorDiv.style.display = 'block';
+      }
+    });
+
+    longUrlInput.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        form.requestSubmit();
+      }
+    });
+
+    copyBtn.addEventListener('click', () => {
+      const url = shortUrlLink.textContent;
+      navigator.clipboard.writeText(url).then(() => {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+      });
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,13 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Vercel
+.vercel/
+
+# Env
+.env 
