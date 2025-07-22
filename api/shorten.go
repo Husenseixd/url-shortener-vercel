@@ -1,10 +1,9 @@
-package main
+package handler
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -24,6 +23,10 @@ type shortenResponse struct {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func generateCode(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -32,7 +35,7 @@ func generateCode(n int) string {
 	return string(b)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -82,10 +85,4 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	resp := shortenResponse{ShortURL: fmt.Sprintf("%s%s/api/%s", proto, host, code)}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	http.HandleFunc("/api/shorten", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }

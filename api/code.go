@@ -1,8 +1,7 @@
-package main
+package handler
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -10,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func Handler(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimPrefix(r.URL.Path, "/api/")
 	if code == "" {
 		http.NotFound(w, r)
@@ -37,9 +36,4 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, longURL, http.StatusFound)
-}
-
-func main() {
-	http.HandleFunc("/api/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
