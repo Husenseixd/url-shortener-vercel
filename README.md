@@ -1,5 +1,7 @@
 # URL Shortener (Go + Vercel + Redis)
 
+https://url-shortener-vercel-blond.vercel.app/
+
 A simple URL shortener web app built with Go, deployable on Vercel, using Redis for storage. No user accounts, just paste a link and get a short URL!
 
 ## Features
