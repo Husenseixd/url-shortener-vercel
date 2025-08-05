@@ -1,7 +1,9 @@
 {
   "rewrites": [
     { "source": "/api/shorten", "destination": "/api/shorten.go" },
+    { "source": "/api/dashboard", "destination": "/api/dashboard.go" },
     { "source": "/api/:code", "destination": "/api/code.go" },
+    { "source": "/dashboard.html", "destination": "/dashboard.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 } 

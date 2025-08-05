@@ -35,9 +35,22 @@ func generateCode(n int) string {
 	return string(b)
 }
 
-func Handler(w http.ResponseWriter, r *http.Request) {
+func ShortenHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Basic bot protection
+	userAgent := r.Header.Get("User-Agent")
+	if isBot(userAgent) {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Rate limiting for URL creation
+	if !checkRateLimit(r) {
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
 	var req shortenRequest
@@ -76,6 +89,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save", http.StatusInternalServerError)
 		return
 	}
+
+	// Log creation time
+	rdb.Set(ctx, fmt.Sprintf("created:%s", code), time.Now().Format(time.RFC3339), 0)
 
 	host := r.Host
 	proto := "https://"
