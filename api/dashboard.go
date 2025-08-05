@@ -43,13 +43,13 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Basic bot protection - check for common bot user agents
 	userAgent := r.Header.Get("User-Agent")
-	if isBot(userAgent) {
+	if isBotDashboard(userAgent) {
 		http.Error(w, "Access denied", http.StatusForbidden)
 		return
 	}
 
 	// Rate limiting
-	if !checkRateLimit(r) {
+	if !checkRateLimitDashboard(r) {
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
@@ -205,4 +205,66 @@ func getRecentClickLogs(ctx context.Context, rdb *redis.Client, limit int) ([]Cl
 	}
 
 	return clickLogs, nil
+}
+
+func isBotDashboard(userAgent string) bool {
+	botPatterns := []string{
+		"bot", "crawler", "spider", "scraper", "curl", "wget",
+		"python", "java", "perl", "ruby", "php", "go-http-client",
+	}
+
+	userAgent = strings.ToLower(userAgent)
+	for _, pattern := range botPatterns {
+		if strings.Contains(userAgent, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+func checkRateLimitDashboard(r *http.Request) bool {
+	// Simple rate limiting - in production, use a proper rate limiter
+	// This is a basic implementation
+	ip := getClientIPDashboard(r)
+	key := fmt.Sprintf("rate_limit:%s", ip)
+
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		return true // Allow if Redis not configured
+	}
+
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		return true
+	}
+
+	rdb := redis.NewClient(opt)
+	ctx := context.Background()
+
+	// Check current count
+	count, err := rdb.Get(ctx, key).Int()
+	if err != nil && err != redis.Nil {
+		return true
+	}
+
+	if count > 100 { // 100 requests per minute
+		return false
+	}
+
+	// Increment counter
+	rdb.Incr(ctx, key)
+	rdb.Expire(ctx, key, time.Minute)
+
+	return true
+}
+
+func getClientIPDashboard(r *http.Request) string {
+	// Get real IP from various headers
+	headers := []string{"X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP"}
+	for _, header := range headers {
+		if ip := r.Header.Get(header); ip != "" {
+			return strings.Split(ip, ",")[0]
+		}
+	}
+	return r.RemoteAddr
 }
